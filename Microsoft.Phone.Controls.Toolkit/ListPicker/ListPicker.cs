@@ -440,7 +440,7 @@ namespace Microsoft.Phone.Controls
         /// Identifies the ItemCountThreshold DependencyProperty.
         /// </summary>
         public static readonly DependencyProperty ItemCountThresholdProperty =
-            DependencyProperty.Register("ItemCountThreshold", typeof(int), typeof(ListPicker), new PropertyMetadata(5, OnItemCountThresholdChanged));
+            DependencyProperty.Register("ItemCountThreshold", typeof(int), typeof(ListPicker), new PropertyMetadata(15, OnItemCountThresholdChanged)); // Enlarge threashold from 5 to 15. (2014/6/6)
 
         private static void OnItemCountThresholdChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
