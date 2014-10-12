@@ -6,6 +6,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Shapes;
 
 namespace Microsoft.Phone.Controls
@@ -154,6 +155,35 @@ namespace Microsoft.Phone.Controls
         }
 
         /// <summary>
+        /// Gets or sets the flag indicating that the item's selectability is changed.
+        /// </summary>
+        public bool IsSelectable
+        {
+            get { return (bool)GetValue(IsSelectableProperty); }
+            set { SetValue(IsSelectableProperty, value); }
+        }
+
+        /// <summary>
+        ///    Identifies the IsSelectable dependency property.
+        /// </summary>
+        public static readonly DependencyProperty IsSelectableProperty =
+            DependencyProperty.Register("IsSelectable", typeof(bool), typeof(LongListMultiSelectorItem), new PropertyMetadata(true, OnIsSelectablePropertyChanged));
+
+        /// <summary>
+        /// Called then the property is changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        static void OnIsSelectablePropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            LongListMultiSelectorItem This = sender as LongListMultiSelectorItem;
+            if (This != null)
+            {
+                This.OnIsSelectableChanged();
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the height of the hint panel.
         /// </summary>
         public double HintPanelHeight
@@ -197,6 +227,15 @@ namespace Microsoft.Phone.Controls
         public LongListMultiSelectorItem()
         {
             this.DefaultStyleKey = typeof(LongListMultiSelectorItem);
+
+            var selectability = new Binding()
+            {
+                Source = this.DataContext,
+                Path = new PropertyPath("IsSelectable"),
+                Mode = BindingMode.OneWay,
+                FallbackValue = true
+            };
+            this.SetBinding(IsSelectableProperty, selectability);
         }
 
 
@@ -261,6 +300,18 @@ namespace Microsoft.Phone.Controls
         }
 
         /// <summary>
+        /// Updates the visual state of the item
+        /// </summary>
+        protected virtual void OnIsSelectableChanged()
+        {
+            UpdateFacialState(IsSelectable ? BaseState : State.Closed, true);
+            if (IsSelectedChanged != null)
+            {
+                IsSelectedChanged(this, null);
+            }
+        }
+
+        /// <summary>
         /// Tap on the cover grid : switch the selected state
         /// </summary>
         /// <param name="sender"></param>
@@ -309,6 +360,8 @@ namespace Microsoft.Phone.Controls
             }
         }
 
+        private State BaseState = State.Closed;
+
         /// <summary>
         /// Changes the visual state of the item
         /// </summary>
@@ -316,27 +369,41 @@ namespace Microsoft.Phone.Controls
         /// <param name="useTransitions">Indicates whether display or not transitions between states</param>
         internal void GotoState(State state, bool useTransitions = false)
         {
+            BaseState = state;
+            UpdateFacialState(state, useTransitions);
+        }
+
+        private void UpdateFacialState(State state, bool useTransitions = false)
+        {
             string stateName;
-            switch (state)
+            if (IsSelectable)
             {
-                default:
-                case State.Closed:
-                    _isOpened = false;
-                    stateName = ClosedStateName;
-                    break;
-                case State.Opened:
-                    _isOpened = true;
-                    stateName = OpenedStateName;
-                    break;
-                case State.Exposed:
-                    stateName = ExposedStateName;
-                    break;
-                case State.Selected:
-                    stateName = SelectedStateName;
-                    break;
-                case State.Unselected:
-                    stateName = UnselectedStateName;
-                    break;
+                switch (state)
+                {
+                    default:
+                    case State.Closed:
+                        _isOpened = false;
+                        stateName = ClosedStateName;
+                        break;
+                    case State.Opened:
+                        _isOpened = true;
+                        stateName = OpenedStateName;
+                        break;
+                    case State.Exposed:
+                        stateName = ExposedStateName;
+                        break;
+                    case State.Selected:
+                        stateName = SelectedStateName;
+                        break;
+                    case State.Unselected:
+                        stateName = UnselectedStateName;
+                        break;
+                }
+            }
+            else
+            {
+                _isOpened = false;
+                stateName = ClosedStateName;
             }
             VisualStateManager.GoToState(this, stateName, useTransitions);
         }
